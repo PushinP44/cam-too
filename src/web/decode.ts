@@ -14,15 +14,21 @@ export async function decodeFile(file: Blob, maxLongEdge = WORKING_MAX_LONG_EDGE
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  // 'srgb' makes the browser convert a Display P3 photo, so the pixels we read are sRGB.
-  const context = canvas.getContext('2d', { colorSpace: 'srgb', willReadFrequently: true });
-  if (!context) {
-    bitmap.close();
-    throw new Error('A 2D canvas is not available');
+  try {
+    // 'srgb' makes the browser convert a Display P3 photo, so the pixels we read are sRGB.
+    const context = canvas.getContext('2d', { colorSpace: 'srgb', willReadFrequently: true });
+    try {
+      if (!context) throw new Error('A 2D canvas is not available');
+      context.imageSmoothingQuality = 'high';
+      context.drawImage(bitmap, 0, 0, width, height);
+    } finally {
+      // Closed as soon as it has been drawn (or has failed to be), before the pixels are read.
+      bitmap.close();
+    }
+    return rgbaToLinear(context.getImageData(0, 0, width, height).data, width, height);
+  } finally {
+    // Frees the canvas's pixel memory now instead of when the garbage collector gets to it.
+    canvas.width = 0;
+    canvas.height = 0;
   }
-  context.imageSmoothingQuality = 'high';
-  context.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
-  return rgbaToLinear(context.getImageData(0, 0, width, height).data, width, height);
 }

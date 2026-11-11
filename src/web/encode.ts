@@ -15,12 +15,18 @@ export function drawDisplay(canvas: HTMLCanvasElement, display: ImageF): void {
 /** Encodes a display (sRGB-encoded) image as a JPEG. Rejects if the browser cannot encode it. */
 export async function encodeJpeg(display: ImageF, quality = 0.92): Promise<Blob> {
   const canvas = document.createElement('canvas');
-  drawDisplay(canvas, display);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      blob => (blob ? resolve(blob) : reject(new Error('The browser could not encode the photo as a JPEG'))),
-      'image/jpeg',
-      quality,
-    );
-  });
+  try {
+    drawDisplay(canvas, display);
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        blob => (blob ? resolve(blob) : reject(new Error('The browser could not encode the photo as a JPEG'))),
+        'image/jpeg',
+        quality,
+      );
+    });
+  } finally {
+    // Frees the canvas's pixel memory now instead of when the garbage collector gets to it.
+    canvas.width = 0;
+    canvas.height = 0;
+  }
 }

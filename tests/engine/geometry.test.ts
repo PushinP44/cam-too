@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { SHAPES, cropRect, resizeArea, cropAndResize } from '../../src/engine/geometry';
 import { createImage } from '../../src/engine/image';
+import { maxAbsDiff } from '../support/synthetic';
 
 const gradient = (w: number, h: number) => { const i = createImage(w, h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) i.data.fill(x / (w - 1), (y * w + x) * 3, (y * w + x) * 3 + 3); return i; };
+const rampDown = (w: number, h: number) => { const i = createImage(w, h); for (let y = 0; y < h; y++) i.data.fill(y / (h - 1), y * w * 3, (y + 1) * w * 3); return i; };
 const grey = (w: number, h: number, values: number[]) => { const i = createImage(w, h); values.forEach((v, p) => i.data.fill(v, p * 3, p * 3 + 3)); return i; };
 const mean = (a: Float32Array) => a.reduce((x, y) => x + y) / a.length;
 const mid = { x: 0.5, y: 0.5 };
@@ -44,6 +46,16 @@ describe('cropAndResize', () => {
   it('lets the offset choose what is kept', () => {
     const g = gradient(40, 30);
     expect(mean(cropAndResize(g, SHAPES['4:5'], { x: 0, y: 0.5 }, 0.05).data)).toBeLessThan(mean(cropAndResize(g, SHAPES['4:5'], { x: 1, y: 0.5 }, 0.05).data));
+  });
+  it('lets the vertical offset choose what is kept, and matches cropping first', () => {
+    const g = rampDown(30, 40);
+    const top = cropAndResize(g, SHAPES['4:5'], { x: 0.5, y: 0 }, 0.05);
+    const bottom = cropAndResize(g, SHAPES['4:5'], { x: 0.5, y: 1 }, 0.05);
+    expect(mean(top.data)).toBeLessThan(mean(bottom.data));
+    // The 4:5 crop of 30x40 is 30x38 (37.5 rounds up), so at y offset 1 it starts at row 2 and ends at the last row.
+    const crop = createImage(30, 38);
+    crop.data.set(g.data.subarray(2 * 30 * 3));
+    expect(maxAbsDiff(bottom.data, resizeArea(crop, 54, 68).data)).toBeLessThan(1e-6);
   });
   it('matches cropping first and then resizing', () => {
     // 800x600 to a 0.1-scale 4:5 shrinks both axes; the 480x600 crop at offset x 0.25 starts at x = 80.
