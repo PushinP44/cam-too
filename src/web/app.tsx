@@ -19,9 +19,12 @@ const PREVIEW_DELAY_MS = 60;
 /** How long a download's object URL stays valid; some browsers read it after the click returns. */
 const OBJECT_URL_LIFETIME_MS = 10_000;
 
-/** The 4:5 crop of `work` at `scale`, with `look` at `strength` (0..100); a null look leaves the photo plain. */
-function renderCrop(work: ImageF, scale: number, look: Look | null, strength: number): ImageF {
-  return render(work, { shape: SHAPE, offset: CENTRE, scale, look, strength: strength / 100, seed: SEED });
+/**
+ * The 4:5 crop of `work` at `scale`, with `look` at `strength` (0..100). A null look gives
+ * no film; `balance` false also skips the exposure balance, which leaves the crop untouched.
+ */
+function renderCrop(work: ImageF, scale: number, look: Look | null, strength: number, balance = true): ImageF {
+  return render(work, { shape: SHAPE, offset: CENTRE, scale, look, strength: strength / 100, seed: SEED, balance });
 }
 
 /** Resolves once the browser has had the chance to paint what changed so far. */
@@ -77,7 +80,7 @@ function Start({ opening, error, onFile }: StartProps): JSX.Element {
   );
 }
 
-function Editor({ work }: { work: ImageF }): JSX.Element {
+function Editor({ work, onChoose }: { work: ImageF; onChoose: () => void }): JSX.Element {
   const [look, setLook] = useState<Look | null>(null);
   const [strength, setStrength] = useState(DEFAULT_STRENGTH);
   const [holding, setHolding] = useState(false);
@@ -87,8 +90,10 @@ function Editor({ work }: { work: ImageF }): JSX.Element {
   const filmId = useId();
   const strengthId = useId();
 
-  // The plain crop is also what holding the preview shows, so it is made once per photo.
-  const plain = useMemo(() => renderCrop(work, PREVIEW_SCALE, null, 0), [work]);
+  // Two crops are made once per photo: the untouched original, which holding the preview
+  // shows, and the one for "None", which is only balanced for exposure.
+  const original = useMemo(() => renderCrop(work, PREVIEW_SCALE, null, 0, false), [work]);
+  const unfilmed = useMemo(() => renderCrop(work, PREVIEW_SCALE, null, 0), [work]);
   // The film preview follows the controls after a short pause. Until it catches up the
   // previous one stays on screen, so dragging the slider does not flicker.
   const [filmed, setFilmed] = useState<ImageF | null>(null);
@@ -101,7 +106,7 @@ function Editor({ work }: { work: ImageF }): JSX.Element {
     return () => clearTimeout(timer);
   }, [work, look, strength]);
 
-  const shown = holding || !look ? plain : (filmed ?? plain);
+  const shown = holding ? original : look ? (filmed ?? unfilmed) : unfilmed;
   useEffect(() => {
     if (canvas.current) drawDisplay(canvas.current, shown);
   }, [shown]);
@@ -113,7 +118,7 @@ function Editor({ work }: { work: ImageF }): JSX.Element {
       // A full-size render takes over a second and blocks the page, so let "Saving…" show first.
       await afterPaint();
       const blob = await encodeJpeg(renderCrop(work, SAVE_SCALE, look, strength));
-      download(blob, `cam-too-${look?.id ?? 'original'}.jpg`);
+      download(blob, `cam-too-${look?.id ?? 'no-film'}.jpg`);
     } catch {
       setError('That photo could not be saved. Try again.');
     } finally {
@@ -195,6 +200,9 @@ function Editor({ work }: { work: ImageF }): JSX.Element {
           {error}
         </p>
       )}
+      <button type="button" class="secondary" disabled={saving} onClick={onChoose}>
+        Choose another photo
+      </button>
     </section>
   );
 }
@@ -221,7 +229,8 @@ export function App(): JSX.Element {
       <header class="bar">
         <h1>cam-too</h1>
       </header>
-      {work ? <Editor work={work} /> : <Start opening={opening} error={error} onFile={open} />}
+      {/* Leaving the editor drops the working image and cancels its pending preview timer. */}
+      {work ? <Editor work={work} onChoose={() => setWork(null)} /> : <Start opening={opening} error={error} onFile={open} />}
     </main>
   );
 }

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { autoBalance } from '../../src/engine/balance';
 import { develop } from '../../src/engine/develop';
-import { render } from '../../src/engine/render';
+import { render, type RenderOptions } from '../../src/engine/render';
 import { toDisplay } from '../../src/engine/color';
 import { createImage } from '../../src/engine/image';
-import { SHAPES } from '../../src/engine/geometry';
+import { SHAPES, cropAndResize } from '../../src/engine/geometry';
 import { STARTER_LOOKS, findLook } from '../../src/looks';
 import { syntheticPhoto, maxAbsDiff } from '../support/synthetic';
 
@@ -50,4 +50,21 @@ describe('develop', () => {
 describe('render', () => {
   it('returns the shape size times the scale', () => { const o = render(syntheticPhoto(160, 120), { shape: SHAPES['1:1'], offset: mid, scale: 0.1, look: warm, strength: 1, seed: 1 }); expect([o.width, o.height]).toEqual([108, 108]); });
   it('works on a tiny source', () => { const o = render(syntheticPhoto(20, 15), { shape: SHAPES['4:5'], offset: mid, scale: 0.1, look: warm, strength: 1, seed: 1 }); expect([o.width, o.height]).toEqual([108, 135]); });
+  describe('exposure balance', () => {
+    // A dark photo, so that balancing it visibly lifts it.
+    const photo = syntheticPhoto(40, 30);
+    const dark = { ...photo, data: photo.data.map(v => v * 0.2) };
+    const plain: RenderOptions = { shape: SHAPES['4:5'], offset: mid, scale: 0.1, look: null, strength: 0, seed: 1 };
+    const crop = cropAndResize(dark, plain.shape, mid, plain.scale);
+    const unbalanced = toDisplay(crop).data;
+
+    it('gives the untouched crop with balance off', () =>
+      expect(maxAbsDiff(render(dark, { ...plain, balance: false }).data, unbalanced)).toBeLessThan(1e-6));
+    it('balances when balance is omitted or true, as before', () => {
+      const byDefault = render(dark, plain).data;
+      expect(maxAbsDiff(byDefault, toDisplay(autoBalance(crop)).data)).toBeLessThan(1e-6);
+      expect(maxAbsDiff(byDefault, render(dark, { ...plain, balance: true }).data)).toBe(0);
+      expect(maxAbsDiff(byDefault, unbalanced)).toBeGreaterThan(0.01);
+    });
+  });
 });

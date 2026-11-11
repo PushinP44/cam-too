@@ -65,6 +65,23 @@ input {
   cursor: default;
 }
 
+/* Quieter than the primary button: no fill, so Save stays the one thing that stands out. */
+.secondary {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .start {
   display: grid;
   gap: 0.75rem;
