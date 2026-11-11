@@ -1,7 +1,5 @@
 import { render } from 'preact';
-
-function App() {
-  return <h1>cam-too</h1>;
-}
+import { App } from './app';
+import './styles.css';
 
 render(<App />, document.getElementById('app')!);
