@@ -6,7 +6,7 @@
 
 **Architecture:** Pure functions on a float RGB buffer (`ImageF`) with no DOM, so all of the engine is testable in Node. Browser code is a thin adapter (decode, encode) and a Preact page. Looks are validated JSON files. Everything runs on the CPU at output size (1080x1350 by default), not at camera size.
 
-**Tech Stack:** TypeScript (strict), Vite, Preact, Vitest, npm, Node >= 20.19. Use the latest stable version of each at install time and commit `package-lock.json`.
+**Tech Stack:** TypeScript (strict), Vite, Preact, Vitest, npm, Node >= 22.12. Use the latest stable version of each at install time and commit `package-lock.json`.
 
 **Spec:** `docs/superpowers/specs/2026-11-11-cam-too-design.md`
 
@@ -70,7 +70,7 @@ Input classes the spec implies that no feature task exercises. Each has a test i
   - `rgbaToLinear(rgba: Uint8ClampedArray, width: number, height: number): ImageF`: straight alpha flattened onto white, then to linear.
   - `displayToRgba(display: ImageF): Uint8ClampedArray`: alpha 255.
 
-- [ ] **Step 1: Set up the project.** `package.json` scripts: `dev` = `vite`, `build` = `tsc --noEmit && vite build`, `test` = `vitest run`, `bench` = `vitest bench --run`, `typecheck` = `tsc --noEmit`, `check` = `npm run typecheck && npm test`. `engines.node` = `>=20.19`. Dependency: `preact`. Dev dependencies: `vite`, `@preact/preset-vite`, `typescript`, `vitest`. `tsconfig.json`: strict, ES2022, `moduleResolution: bundler`, `jsx: react-jsx` with `jsxImportSource: preact` (follow the preset's docs if they differ), `resolveJsonModule: true`, `types: ["vite/client"]` (for `import.meta.glob`), `lib` ES2022 + DOM, `include` `src` and `tests`. `vite.config.ts` uses the preact preset and `test.include = ['tests/**/*.test.ts']`. CI runs on push and pull request: checkout, Node 22, `npm ci`, `npm run check`, `npm run build`. `README.md`: three lines on what it is, a quick start of exactly `npm install` then `npm run dev`, a link to the spec, MIT. Run `npm install`.
+- [ ] **Step 1: Set up the project.** `package.json` scripts: `dev` = `vite`, `build` = `tsc --noEmit && vite build`, `test` = `vitest run`, `bench` = `vitest bench --run`, `typecheck` = `tsc --noEmit`, `check` = `npm run typecheck && npm test`. `engines.node` = `^22.12.0 || ^24.0.0 || >=26.0.0` (vitest's supported range). Dependency: `preact`. Dev dependencies: `vite`, `@preact/preset-vite`, `typescript`, `vitest`. `tsconfig.json`: strict, ES2022, `moduleResolution: bundler`, `jsx: react-jsx` with `jsxImportSource: preact` (follow the preset's docs if they differ), `resolveJsonModule: true`, `types: ["vite/client"]` (for `import.meta.glob`), `lib` ES2022 + DOM, `include` `src` and `tests`. `vite.config.ts` uses the preact preset and `test.include = ['tests/**/*.test.ts']`. CI runs on push and pull request: checkout, Node 22, `npm ci`, `npm run check`, `npm run build`. `README.md`: three lines on what it is, a quick start of exactly `npm install` then `npm run dev`, a link to the spec, MIT. Run `npm install`.
 - [ ] **Step 2: Write the failing test** `tests/engine/color.test.ts`:
 
 ```ts

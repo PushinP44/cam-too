@@ -11,6 +11,8 @@ npm install
 npm run dev
 ```
 
+Node 22.12 or newer is required.
+
 The design spec is at [docs/superpowers/specs/2026-11-11-cam-too-design.md](docs/superpowers/specs/2026-11-11-cam-too-design.md).
 
 MIT licensed, see [LICENSE](LICENSE).
