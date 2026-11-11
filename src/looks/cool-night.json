@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "id": "cool-night",
+  "name": "Cool Night",
+  "kind": "film",
+  "credits": "cam-too contributors, MIT",
+  "tone": {
+    "ev": 0,
+    "slope": 0.21,
+    "pivot": [-0.25, -0.4, -0.7],
+    "black": 0.015,
+    "white": 0.99,
+    "mono": null
+  },
+  "colour": {
+    "saturation": 1.05,
+    "shadowTint": [-0.01, 0.008, 0.025],
+    "highlightTint": [0.012, 0.002, -0.01]
+  },
+  "halation": { "threshold": 0.5, "tint": [1, 0.22, 0.06], "amount": 0.95 },
+  "grain": { "amount": 0.026, "size": 0.75 },
+  "vignette": 0.25
+}

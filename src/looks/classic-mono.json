@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "id": "classic-mono",
+  "name": "Classic Mono",
+  "kind": "film",
+  "credits": "cam-too contributors, MIT",
+  "tone": {
+    "ev": 0,
+    "slope": 0.23,
+    "pivot": [-0.45, -0.45, -0.45],
+    "black": 0.015,
+    "white": 0.99,
+    "mono": [0.35, 0.5, 0.15]
+  },
+  "colour": {
+    "saturation": 0,
+    "shadowTint": [0, 0, 0],
+    "highlightTint": [0, 0, 0]
+  },
+  "halation": { "threshold": 0.75, "tint": [1, 1, 1], "amount": 0.12 },
+  "grain": { "amount": 0.045, "size": 0.8 },
+  "vignette": 0.3
+}
